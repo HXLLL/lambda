@@ -1,4 +1,7 @@
-from lambda_calculus import *
+from utils import *
+import natural_number as N
+import integer as Z
+from functools import partial
 
 # debug utils
 
@@ -7,42 +10,36 @@ import unittest
 import sys
 sys.setrecursionlimit(100000000)
 
-def to_int(x):
-    return x(lambda x:x+1)(0)
+# debug utils
 def to_bool(x):
     return x(True)(False)
+def N_to_int(x):
+    return x(lambda x:x+1)(0)
+def Z_to_int(x):
+    return First(x)(lambda x: x+1)(0) - Second(x)(lambda x: x+1)(0)
+def int_to_N(n):
+    return N.UInt(n)
+def int_to_Z(n):
+    if (n<0): return Pair(N.Zero)(int_to_N(-n))
+    else: return Pair(int_to_N(n))(N.Zero)
 def to_pair(p, f_out = lambda x: x):
     return (f_out(First(p)), f_out(Second(p)))
-def generate_val(n):
-    return Zero if n == 0 else Succ(generate_val(n-1))
 
 class TestLambda(unittest.TestCase):
-    def verify_uninary(self, f, std, vals, f_in, f_out):
-        for n in vals:
-            self.assertEqual(f_out(f(f_in(n))), std(n))
-    def verify_binary(self, f, std, vals, f_in, f_out):
-        for n1 in vals:
-            for n2 in vals:
-                self.assertEqual(f_out(f(f_in(n1))(f_in(n2))), std(n1, n2))
-    
+    def verify(self, f, std, n_args, vals, f_in, f_out):
+        if (n_args == 1):
+            for n in vals:
+                self.assertEqual(f_out(f(f_in(n))), std(n))
+        elif (n_args == 2):
+            for n1 in vals:
+                for n2 in vals:
+                    self.assertEqual(f_out(f(f_in(n1))(f_in(n2))), std(n1, n2))
+        else:
+            assert(False)
+
     def pair_uninary(self, f, std, f_in = lambda x: x, f_out = lambda x: x):
-        self.verify_uninary(f, std, [(x,y) for x in range(10) for y in range(10)],
+        self.verify(f, std, 1, [(x,y) for x in range(10) for y in range(10)],
                 lambda p: Pair(f_in(p[0]))(f_in(p[1])), f_out)
-
-    def bool_uninary(self, f, std):
-        self.verify_uninary(f, std, [True, False], Boolean, to_bool)
-    def bool_binary(self, f, std):
-        self.verify_binary(f, std, [True, False], Boolean, to_bool)
-
-    def cmp_uninary(self, f, std):
-        self.verify_uninary(f, std, range(10), UInt, to_bool)
-    def cmp_binary(self, f, std):
-        self.verify_binary(f, std, range(10), UInt, to_bool)
-
-    def arith_uninary(self, f, std, val = range(10)):
-        self.verify_uninary(f, std, val, UInt, to_int)
-    def arith_binary(self, f, std):
-        self.verify_binary(f, std, range(10), UInt, to_int)
 
     def test_pair(self):
         self.pair_uninary(First, lambda p: p[0])
@@ -51,31 +48,65 @@ class TestLambda(unittest.TestCase):
     def test_bool(self):
         self.assertEqual(to_bool(T), True)
         self.assertEqual(to_bool(F), False)
+
+        test_bool = partial(self.verify, vals=[True, False], f_in = Boolean, f_out = to_bool)
         
-        self.bool_uninary(Not, lambda x: not x)
-        self.bool_binary(And, lambda x,y: x and y)
-        self.bool_binary(Or, lambda x,y: x or y)
+        test_bool(Not, lambda x: not x, 1)
+        test_bool(And, lambda x,y: x and y, 2)
+        test_bool(Or, lambda x,y: x or y, 2)
 
-    def test_natural_number(self):
-        self.assertEqual(to_int(Zero), 0)
-        self.assertEqual(to_int(One), 1)
-        self.assertEqual(to_int(Two), 2)
+    def test_N_definition(self):
+        self.assertEqual(N_to_int(N.Zero), 0)
+        self.assertEqual(N_to_int(N.One), 1)
+        self.assertEqual(N_to_int(N.Two), 2)
 
-        self.arith_uninary(Succ, lambda x: x+1)
-        self.pair_uninary(PairNPlus1N, lambda p: (p[0]+1,p[0]), f_in = UInt,
-                f_out = lambda p: (to_int(First(p)), to_int(Second(p))))
-        # print(to_pair(Two(PairNPlus1N)(Pair(Zero)(Zero)), f_out = to_int))
-        self.arith_uninary(Prev, lambda x: x-1, val=range(1,11))
+    def test_N_arithmetic(self):
 
-    def test_arithmetic(self):
-        self.arith_binary(Add, lambda x,y: x+y)
-        # self.arith_binary(Multiply, lambda x,y: x*y)
-        print(to_int(Multiply(UInt(0))(UInt(0))))
+        verify_arith = partial(self.verify, vals = range(10), f_in = N.UInt, f_out = N_to_int)
 
-    def test_cmp(self):
-        self.cmp_uninary(IsZero, lambda x: x == 0)
+        verify_arith(N.Succ, lambda x: x+1, 1)
+        self.verify(N.Prev, lambda x: x-1, 1, range(1,11), N.UInt, N_to_int)
 
+        verify_arith(N.Add, lambda x,y: x+y, 2)
+        verify_arith(N.Multiply, lambda x,y: x*y, 2)
 
+    def test_N_cmp(self):
+        verify_cmp = partial(self.verify, vals=range(10), f_in = N.UInt, f_out = to_bool)
+        verify_cmp(N.IsZero, lambda x: x == 0, 1)
+        verify_cmp(N.GreaterEqual, lambda x,y: x>=y, 2)
+        verify_cmp(N.LessEqual, lambda x,y: x<=y, 2)
+        verify_cmp(N.Equal, lambda x,y: x==y, 2)
+        verify_cmp(N.NotEqual, lambda x,y: x!=y, 2)
+        verify_cmp(N.Greater, lambda x,y: x>y, 2)
+        verify_cmp(N.Less, lambda x,y: x<y, 2)
+    
+    def test_Z(self):
+        R = range(-10, 10)
+
+        self.assertEqual(Z_to_int(Z.Zero), 0)
+
+        verify_arith = partial(self.verify, vals = R, f_in = int_to_Z, f_out = Z_to_int)
+
+        verify_arith(Z.Succ, lambda n: n+1, 1)
+        verify_arith(Z.Prev, lambda n: n-1, 1)
+        verify_arith(Z.Neg, lambda n: -n, 1)
+        verify_arith(Z.Add, lambda x,y: x+y, 2)
+        verify_arith(Z.Minus, lambda x,y: x-y, 2)
+        verify_arith(Z.Multiply, lambda x,y: x*y, 2)
+
+        verify_cmp = partial(self.verify, vals=R, f_in=int_to_Z, f_out=to_bool)
+
+        verify_cmp(Z.IsZero, lambda n: n==0, 1)
+        verify_cmp(Z.IsPositive, lambda n: n>0, 1)
+        verify_cmp(Z.IsNegative, lambda n: n<0, 1)
+
+        verify_cmp(Z.Equal, lambda x,y: x==y, 2)
+        verify_cmp(Z.NotEqual, lambda x,y: x!=y, 2)
+        verify_cmp(Z.Greater, lambda x,y: x>y, 2)
+        verify_cmp(Z.Less, lambda x,y: x<y, 2)
+        verify_cmp(Z.GreaterEqual, lambda x,y: x>=y, 2)
+        verify_cmp(Z.LessEqual, lambda x,y: x<=y, 2)
+        
 
 if __name__ == "__main__":
     unittest.main()
