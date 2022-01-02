@@ -32,3 +32,4 @@ LessEqual = lambda x: lambda y: Not(Greater(x)(y))
 
 # convert to int
 N2Z = lambda x: Pair(x)(N.Zero)
+Z2N = lambda x: P2(x)(N.Prev)(P1(x))

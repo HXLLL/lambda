@@ -11,6 +11,7 @@ import sys
 sys.setrecursionlimit(100000000)
 
 # debug utils
+ID = lambda x: x
 def to_bool(x):
     return x(True)(False)
 def N_to_int(x):
@@ -106,7 +107,10 @@ class TestLambda(unittest.TestCase):
         verify_cmp(Z.Less, lambda x,y: x<y, 2)
         verify_cmp(Z.GreaterEqual, lambda x,y: x>=y, 2)
         verify_cmp(Z.LessEqual, lambda x,y: x<=y, 2)
-        
+
+        self.verify(Z.N2Z, ID, 1, range(10), int_to_N, Z_to_int)
+        self.verify(Z.Z2N, lambda x: 0 if x < 0 else x, 1, R, int_to_Z, N_to_int)
+
 
 if __name__ == "__main__":
     unittest.main()
