@@ -85,6 +85,7 @@ class TestLambda(unittest.TestCase):
         R = range(-10, 10)
 
         self.assertEqual(Z_to_int(Z.Zero), 0)
+        self.assertEqual(Z_to_int(Z.One), 1)
 
         verify_arith = partial(self.verify, vals = R, f_in = int_to_Z, f_out = Z_to_int)
 
@@ -110,6 +111,12 @@ class TestLambda(unittest.TestCase):
 
         self.verify(Z.N2Z, ID, 1, range(10), int_to_N, Z_to_int)
         self.verify(Z.Z2N, lambda x: 0 if x < 0 else x, 1, R, int_to_Z, N_to_int)
+
+    def test_Y(self):
+        Sum = lambda r: lambda n: Cond(N.IsZero(n))(N.Zero)(N.Add(n)(r(N.Prev(n))))
+
+        Five = int_to_N(5)
+        print(N_to_int(Y(Sum)(Five)))
 
 
 if __name__ == "__main__":

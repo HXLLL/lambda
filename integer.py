@@ -6,6 +6,7 @@ P2 = Second
 
 # Integer represented as (n1,n2) has value (n1-n2)
 Zero = Pair(N.Zero)(N.Zero)
+One = Pair(N.One)(N.Zero)
 Succ = lambda p: Pair(N.Succ(P1(p)))(P2(p))
 Prev = lambda p: Pair(P1(p))(N.Succ(P2(p)))
 

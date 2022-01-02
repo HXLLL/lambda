@@ -13,3 +13,5 @@ Or = lambda x: lambda y: x(T)(y)
 
 # cond
 Cond = lambda x: lambda y: lambda z: x(y)(z)
+
+Y = lambda y: (lambda x: y(x(x)))(lambda x: y(x(x)))
