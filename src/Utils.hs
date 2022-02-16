@@ -7,7 +7,6 @@ pair = \x -> \y -> \f -> f x y
 first = \p -> p (\x -> \y -> x)
 second = \p -> p (\x -> \y -> y)
 
-
 -- utils
 realPair = \p -> (first p, second p)
 
