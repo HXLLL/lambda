@@ -2,7 +2,6 @@ module TestUtils where
 
 import Test.HUnit
 
-boolRanges = [True, False]
 naturalNumberRanges = [1..10]
 
 -- unaryTests :: (Eq a, Show a) => 

@@ -30,13 +30,15 @@ toMyBool False = false
 
 -- tests
 
+boolRange = [True, False]
+
 boolBinaryTests my_op std_op = 
-  binaryTests boolRanges my_op std_op toMyBool toBool
+  binaryTests boolRange my_op std_op toMyBool toBool
 
 tests = "Boolean" ~: test [
             "true" ~: toBool true ~?= True
           , "false" ~: toBool false ~?= False
-          , "not" ~: unaryTests boolRanges inv not toMyBool toBool
+          , "not" ~: unaryTests boolRange inv not toMyBool toBool
           , "and" ~: boolBinaryTests Boolean.and (&&)
           , "or" ~: boolBinaryTests Boolean.or (||)
           ]
